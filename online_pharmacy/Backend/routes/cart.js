@@ -20,7 +20,6 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
-
 // Add an item to the cart
 router.post('/', authMiddleware, async (req, res) => {
   try {
@@ -68,7 +67,7 @@ router.delete('/:medicineId', authMiddleware, async (req, res) => {
   }
 });
 
-// Clear the entire cart
+// Clear the entire cart (correct DELETE route)
 router.delete('/', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;

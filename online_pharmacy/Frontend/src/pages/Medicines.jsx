@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useNotification } from '../context/NotificationContext';
@@ -10,6 +9,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 const Medicines = () => {
   const [medicines, setMedicines] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const { addNotification } = useNotification();
   const { setCartItems, cartItems } = useCart();
   const { user } = useAuth();
@@ -30,6 +30,23 @@ const Medicines = () => {
     fetchMedicines();
   }, [addNotification]);
 
+  // Handle search query change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Filter medicines based on search query
+  const filteredMedicines = medicines.filter((medicine) => 
+    medicine.name && medicine.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentMedicines = filteredMedicines.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredMedicines.length / itemsPerPage);
+
+  // Add to cart logic
   const addToCart = async (medicine) => {
     if (!user) {
       addNotification('Please login to add items to cart', 'warning');
@@ -54,15 +71,20 @@ const Medicines = () => {
 
   if (loading) return <LoadingSpinner fullScreen />;
 
-  // Pagination logic
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentMedicines = medicines.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(medicines.length / itemsPerPage);
-
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold text-gray-900 mb-8">All Medicines</h2>
+
+      {/* Search Input */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={handleSearchChange}
+          placeholder="Search for medicines"
+          className="w-full p-2 border rounded-lg"
+        />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {currentMedicines.map((medicine, index) => (

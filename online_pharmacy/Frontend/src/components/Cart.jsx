@@ -1,141 +1,165 @@
-import { useState, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { FaBars, FaTimes, FaShoppingCart, FaUser, FaPills } from 'react-icons/fa';
-import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+import { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const { user, logout } = useAuth();
-  const { cartCount } = useCart();
-  const [currentUser, setCurrentUser] = useState(user);
+const Cart = () => {
+  const { cartItems, setCartItems } = useCart();
+  const { user, setUser } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Fetch user data from localStorage if not available in context
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token && !user) {
+      // Get user data using token if it's not already in context
+      const fetchUser = async () => {
+        try {
+          const response = await axios.get('http://localhost:2010/api/user', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUser(response.data);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      };
+
+      fetchUser();
+    } else if (!token) {
+      navigate('/login'); // Redirect if there's no token
+    }
+  }, [user, navigate, setUser]);
 
   useEffect(() => {
-    setCurrentUser(user);
-  }, [user]);
+    const fetchCart = async () => {
+      if (!user) return; // Don't fetch if user isn't logged in
 
-  const handleLogout = () => {
-    logout();
-    setCurrentUser(null);
+      try {
+        setLoading(true);
+        const { data } = await axios.get('http://localhost:2010/api/cart', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        setCartItems(data.items || []);
+      } catch (error) {
+        console.error('Error fetching cart:', error.response?.data || error);
+        // Optional: redirect if there's an issue with the cart
+        if (error.response?.status === 401) {
+          navigate('/login');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCart();
+  }, [user, setCartItems, navigate]);
+
+  const updateQuantity = async (medicineId, newQuantity) => {
+    if (newQuantity < 1) return;
+
+    setLoading(true);
+    try {
+      await axios.post('https://online-pharmacy-ps8n.onrender.com/api/cart', 
+        { medicineId, quantity: newQuantity }, 
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+
+      setCartItems(prevCart =>
+        prevCart.map(item =>
+          item.medicineId._id === medicineId ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    } catch (error) {
+      console.error('Error updating cart:', error.response?.data || error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const menuItems = [
-    { name: 'Home', path: '/' },
-    { name: 'Medicines', path: '/medicines' },
-    { name: 'Cart', path: '/cart', icon: <FaShoppingCart />, count: cartCount },
-    { name: 'Profile', path: '/profile', icon: <FaUser /> }
-  ];
+  const removeItemFromCart = async (medicineId) => {
+    setLoading(true);
+    try {
+      await axios.delete(`https://online-pharmacy-ps8n.onrender.com/api/cart/${medicineId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setCartItems(prevCart => prevCart.filter(item => item.medicineId._id !== medicineId));
+    } catch (error) {
+      console.error('Error removing item:', error.response?.data || error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalAmount = useMemo(() => {
+    return cartItems.reduce((sum, item) => sum + item.medicineId.price * item.quantity, 0);
+  }, [cartItems]);
+
+  const handleProceedToPayment = () => {
+    navigate('/payment'); // Redirect to payment page
+  };
 
   return (
-    <nav className="bg-white shadow-lg fixed w-full z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0 flex items-center">
-              <FaPills className="h-8 w-8 text-primary-600" />
-              <span className="ml-2 text-xl font-bold text-gray-800">PharmaCare</span>
-            </Link>
-            
-            <div className="hidden md:flex md:items-center md:ml-6">
-              {menuItems.map((item) => (
-                <NavLink
-                  key={item.name}
-                  to={item.path}
-                  className={({ isActive }) => 
-                    `px-3 py-2 rounded-md text-sm font-medium flex items-center ${
-                      isActive 
-                        ? 'text-primary-600 bg-gray-100' 
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`
-                  }
-                >
-                  {item.icon && <span className="mr-1">{item.icon}</span>}
-                  {item.name}
-                  {item.count > 0 && item.name === 'Cart' && (
-                    <span className="ml-1 bg-primary-500 text-white rounded-full px-2 py-1 text-xs">
-                      {item.count}
-                    </span>
-                  )}
-                </NavLink>
-              ))}
-            </div>
-          </div>
+    <div className="max-w-3xl mx-auto p-6">
+      <h2 className="text-3xl font-bold mb-6">Your Cart</h2>
 
-          <div className="flex items-center md:hidden">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            >
-              {isOpen ? <FaTimes className="h-6 w-6" /> : <FaBars className="h-6 w-6" />}
-            </button>
-          </div>
+      {cartItems.length === 0 ? (
+        <p className="text-gray-600">Your cart is empty.</p>
+      ) : (
+        <div className="space-y-4">
+          {cartItems.map((item) => (
+            <div key={item.medicineId._id} className="bg-white shadow-md rounded-lg p-4 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold">{item.medicineId.name}</h3>
+                <p className="text-gray-600">${item.medicineId.price.toFixed(2)} each</p>
+                <p className="text-gray-800 font-medium">Subtotal: ${(item.medicineId.price * item.quantity).toFixed(2)}</p>
+              </div>
 
-          <div className="hidden md:flex md:items-center">
-            {currentUser ? (
-              <div className="ml-4 relative">
+              <div className="flex items-center space-x-4">
+                <button 
+                  onClick={() => updateQuantity(item.medicineId._id, item.quantity - 1)}
+                  className="bg-gray-200 px-3 py-1 rounded-lg hover:bg-gray-300"
+                  disabled={loading}
+                >-</button>
+
+                <span className="text-lg">{item.quantity}</span>
+
+                <button 
+                  onClick={() => updateQuantity(item.medicineId._id, item.quantity + 1)}
+                  className="bg-gray-200 px-3 py-1 rounded-lg hover:bg-gray-300"
+                  disabled={loading}
+                >+</button>
+
                 <button
-                  onClick={handleLogout}
-                  className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-900"
+                  onClick={() => removeItemFromCart(item.medicineId._id)}
+                  className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+                  disabled={loading}
                 >
-                  <span className="mr-1">{currentUser.name}</span>
-                  <FaUser className="h-5 w-5" />
+                  Remove
                 </button>
               </div>
-            ) : (
-              <Link
-                to="/login"
-                className="ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100"
-              >
-                Login
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
+            </div>
+          ))}
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {menuItems.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.path}
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100"
-                onClick={() => setIsOpen(false)}
-              >
-                <div className="flex items-center">
-                  {item.icon && <span className="mr-2">{item.icon}</span>}
-                  {item.name}
-                  {item.count > 0 && item.name === 'Cart' && (
-                    <span className="ml-2 bg-primary-500 text-white rounded-full px-2 py-1 text-xs">
-                      {item.count}
-                    </span>
-                  )}
-                </div>
-              </NavLink>
-            ))}
-            {currentUser ? (
-              <button
-                onClick={handleLogout}
-                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100"
-              >
-                Logout
-              </button>
-            ) : (
-              <Link
-                to="/login"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100"
-                onClick={() => setIsOpen(false)}
-              >
-                Login
-              </Link>
-            )}
+          {/* Total Amount Section */}
+          <div className="bg-white shadow-md rounded-lg p-4 mt-4 flex justify-between items-center">
+            <h3 className="text-xl font-bold">Total Amount:</h3>
+            <span className="text-xl font-semibold text-primary-600">${totalAmount.toFixed(2)}</span>
           </div>
+
+          {/* Proceed to Payment Button */}
+          <button
+            onClick={handleProceedToPayment}
+            className="mt-6 bg-primary-500 text-black px-6 py-2 rounded-lg border-2 border-primary-600 hover:bg-primary-600 hover:border-primary-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 active:shadow-md"
+          >
+            Proceed to Payment
+          </button>
+
         </div>
       )}
-    </nav>
+    </div>
   );
 };
 
-export default Navbar;
+export default Cart;

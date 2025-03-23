@@ -1,11 +1,10 @@
-// PaymentPage.jsx
 import { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const PaymentPage = () => {
-  const { cartItems } = useCart();
+  const { cartItems, setCartItems } = useCart();
   const [loading, setLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const navigate = useNavigate();
@@ -21,10 +20,23 @@ const PaymentPage = () => {
           cartItems, // Pass cart items for payment processing
         }
       );
-
+      console.log("Payment successful!");
+  
       // If payment is successful
       setPaymentStatus('Payment successful!');
-      navigate('/success');
+  
+      // Clear the cart locally and on the backend only if payment is successful
+      setCartItems([]);
+  
+      // Clear the cart on the backend using DELETE request
+      await axios.delete(
+        'https://online-pharmacy-ps8n.onrender.com/api/cart', // Corrected DELETE method
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+  
+      // Navigate to success page with orderId as state
+      navigate('/success', { state: { orderId: response.data.orderId } });
+  
     } catch (error) {
       console.error('Payment error:', error);
       setPaymentStatus('Payment failed. Please try again.');
@@ -32,6 +44,7 @@ const PaymentPage = () => {
       setLoading(false);
     }
   };
+  
 
   // Calculate total amount for the cart
   const totalAmount = cartItems.reduce(

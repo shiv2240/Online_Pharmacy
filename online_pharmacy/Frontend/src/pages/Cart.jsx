@@ -78,6 +78,20 @@ const Cart = () => {
     }
   };
 
+  const removeItemFromCart = async (medicineId) => {
+    setLoading(true);
+    try {
+      await axios.delete(`https://online-pharmacy-ps8n.onrender.com/api/cart/${medicineId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setCartItems(prevCart => prevCart.filter(item => item.medicineId._id !== medicineId));
+    } catch (error) {
+      console.error('Error removing item:', error.response?.data || error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const totalAmount = useMemo(() => {
     return cartItems.reduce((sum, item) => sum + item.medicineId.price * item.quantity, 0);
   }, [cartItems]);
@@ -116,6 +130,14 @@ const Cart = () => {
                   className="bg-gray-200 px-3 py-1 rounded-lg hover:bg-gray-300"
                   disabled={loading}
                 >+</button>
+
+                <button
+                  onClick={() => removeItemFromCart(item.medicineId._id)}
+                  className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+                  disabled={loading}
+                >
+                  Remove
+                </button>
               </div>
             </div>
           ))}
