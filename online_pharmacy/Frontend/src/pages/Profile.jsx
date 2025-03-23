@@ -19,7 +19,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchPrescriptions = async () => {
       try {
-        const res = await axios.get('/api/prescriptions');
+        const res = await axios.get('https://online-pharmacy-ps8n.onrender.com/api/prescriptions');
         setPrescriptions(res.data);
       } catch (error) {
         console.error(error);

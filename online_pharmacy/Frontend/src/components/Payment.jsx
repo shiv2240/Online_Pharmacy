@@ -13,6 +13,9 @@ const PaymentPage = () => {
   const handlePayment = async () => {
     setLoading(true);
     try {
+      // Log cart items being sent to the backend
+      console.log("Sending cartItems:", cartItems);
+
       // Call your backend to process the payment
       const response = await axios.post(
         'https://online-pharmacy-ps8n.onrender.com/api/charge', // Update with your backend URL
@@ -20,31 +23,33 @@ const PaymentPage = () => {
           cartItems, // Pass cart items for payment processing
         }
       );
-      console.log("Payment successful!");
-  
+      
       // If payment is successful
+      console.log("Payment successful!");
+
       setPaymentStatus('Payment successful!');
-  
+
       // Clear the cart locally and on the backend only if payment is successful
       setCartItems([]);
-  
+
       // Clear the cart on the backend using DELETE request
       await axios.delete(
         'https://online-pharmacy-ps8n.onrender.com/api/cart', // Corrected DELETE method
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-  
+
       // Navigate to success page with orderId as state
       navigate('/success', { state: { orderId: response.data.orderId } });
-  
+
     } catch (error) {
       console.error('Payment error:', error);
       setPaymentStatus('Payment failed. Please try again.');
+      // Log the full error object for debugging
+      console.error('Error details:', error.response || error);
     } finally {
       setLoading(false);
     }
   };
-  
 
   // Calculate total amount for the cart
   const totalAmount = cartItems.reduce(

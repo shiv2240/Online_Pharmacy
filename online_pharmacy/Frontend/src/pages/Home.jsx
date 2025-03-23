@@ -7,7 +7,8 @@ function Home() {
     {
       icon: <FaSearch />,
       title: "Easy Search",
-      description: "Find your medicines quickly with our advanced search system",
+      description:
+        "Find your medicines quickly with our advanced search system",
     },
     {
       icon: <FaPills />,
@@ -33,6 +34,11 @@ function Home() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative w-screen h-screen flex flex-col items-center justify-center text-center text-black px-6"
+        style={{
+          backgroundImage: 'url("../images/17843.jpg")', // Path to your background image
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
         {/* 3D Moving Background Animation */}
         <motion.div
@@ -47,17 +53,17 @@ function Home() {
             duration: 5,
             ease: "easeInOut",
           }}
-          className="absolute inset-0 w-full h-full bg-gradient-to-r from-gray-700 to-gray-300 opacity-50 rounded-full blur-3xl"
+          className="absolute inset-0 w-full h-full bg-gradient-to-r from-orange-400 to-pink-300 opacity-40 rounded-full blur-3xl"
         ></motion.div>
 
-        <h1 className="text-5xl font-bold mb-6 relative z-10">
+        <h1 className="text-5xl font-bold mb-6 relative z-10 text-white">
           Your Health, Our Priority
         </h1>
-        <p className="text-2xl mb-8 relative z-10">
+        <p className="text-2xl mb-8 relative z-10 text-white">
           Get your medicines delivered at your doorstep
         </p>
         <Link
-          to="/products"
+          to="/medicines"
           className="relative z-10 bg-black text-white px-8 py-3 rounded-full font-semibold hover:bg-gray-800 transition duration-300"
         >
           Shop Now
@@ -87,13 +93,22 @@ function Home() {
       </div>
 
       {/* CTA Section */}
-      <div className="w-screen h-screen bg-gradient-to-b from-white to-gray-300 flex flex-col items-center justify-center text-center text-black px-6">
+      <div
+        className="w-screen h-screen bg-gradient-to-b from-white to-gray-300 flex flex-col items-center justify-center text-center text-black px-6"
+        style={{
+          backgroundImage: 'url("../images/17843.jpg")',
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          zIndex: '-1',
+        }}
+      >
         <h2 className="text-4xl font-bold mb-4">Ready to get started?</h2>
         <p className="text-2xl mb-8">
-          Join thousands of satisfied customers who trust us with their health needs
+          Join thousands of satisfied customers who trust us with their health
+          needs
         </p>
         <Link
-          to="/signup"
+          to="/register"
           className="bg-black text-white px-8 py-3 rounded-full font-semibold hover:bg-gray-800 transition duration-300"
         >
           Create Account

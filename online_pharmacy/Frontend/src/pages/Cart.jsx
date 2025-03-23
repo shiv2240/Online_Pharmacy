@@ -156,7 +156,7 @@ const Cart = () => {
             Proceed to Payment
           </button>
 
-        </div>
+        </div>  
       )}
     </div>
   );

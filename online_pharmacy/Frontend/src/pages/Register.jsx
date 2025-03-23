@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import * as Yup from "yup";
 import { useAuth } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
+import image from "../images/17843.jpg";  // Path to your background image
 
 const registerSchema = Yup.object().shape({
   name: Yup.string().required("Required"),
@@ -33,9 +34,19 @@ const Register = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen flex items-center justify-center bg-gray-50"
+      className="min-h-screen flex items-center justify-center bg-gray-50 relative"
     >
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
+      {/* Background Image with Blur */}
+      <div
+        className="absolute inset-0 w-full h-full bg-cover bg-center z-0"
+        style={{
+          backgroundImage: `url(${image})`, 
+          backdropFilter: 'blur(10px)',
+        }}
+      ></div>
+
+      {/* Content Box */}
+      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md z-10 relative">
         <div className="text-center">
           <h2 className="text-3xl font-bold">Create Account</h2>
           <p className="mt-2 text-gray-600">Join our pharmacy community</p>

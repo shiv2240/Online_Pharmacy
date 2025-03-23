@@ -28,7 +28,7 @@ app.use('/api/medicines', medicineRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/charge', chargeRoutes); // Add the payment route
+app.use('/api/charge', chargeRoutes); 
 
 // Start server
 app.listen(PORT, () => {

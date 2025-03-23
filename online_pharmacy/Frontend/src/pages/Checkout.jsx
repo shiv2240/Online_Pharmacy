@@ -22,13 +22,14 @@ const Checkout = () => {
 
   const handleCheckout = async () => {
     try {
-      await axios.post('https://online-pharmacy-ps8n.onrender.com/api/orders', 
+      await axios.post('https://online-pharmacy-ps8n.onrender.com/api/orders'), 
         { items: cartItems.map(item => ({
           medicineId: item.medicineId._id,
           quantity: item.quantity
         }))},
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      );
+      
+          }  ;
 
       setCartItems([]);
       addNotification('Order placed successfully!', 'success');
