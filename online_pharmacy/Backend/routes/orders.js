@@ -16,8 +16,16 @@ router.get('/:userId', async (req, res) => {
 // Create a new order
 router.post('/:userId', async (req, res) => {
   try {
-    const { items } = req.body;
-    const newOrder = new Order({ userId: req.params.userId, items, status: 'processing' });
+    const { items, address, contactNumber, paymentMethod, cardDetails } = req.body;
+    const newOrder = new Order({
+      userId: req.params.userId,
+      items,
+      address,
+      contactNumber,
+      paymentMethod,
+      cardDetails,
+      status: 'processing',
+    });
     await newOrder.save();
     res.status(201).json(newOrder);
   } catch (error) {

@@ -1,84 +1,115 @@
-import { useContext, useEffect, useState } from 'react';
-import axios from 'axios';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { useNotification } from '../context/NotificationContext';
-import { FaPlus, FaMinus, FaTimes } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+import { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const Cart = () => {
-  const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
-  const { addNotification } = useNotification();
   const { cartItems, setCartItems } = useCart();
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // Initialize navigate hook
 
   useEffect(() => {
     const fetchCart = async () => {
+      if (!user) return;
       try {
-        if (!user) {
-          addNotification('Please login to view your cart', 'warning');
-          navigate('/login');
-          return;
-        }
-
-        const { data } = await axios.get('/api/cart', {
+        setLoading(true);
+        const { data } = await axios.get('http://localhost:2010/api/cart', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
-
         setCartItems(data.items || []);
       } catch (error) {
-        addNotification(error.response?.data?.message || 'Failed to load cart', 'error');
+        console.error('Error fetching cart:', error.response?.data || error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchCart();
-  }, [user, setCartItems, addNotification, navigate]);
+  }, [user, setCartItems]);
 
-  const handleQuantityChange = async (medicineId, newQuantity) => {
+  const updateQuantity = async (medicineId, newQuantity) => {
     if (newQuantity < 1) return;
 
+    setLoading(true);
     try {
-      await axios.post('/api/cart', { medicineId, quantity: newQuantity }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      await axios.post('http://localhost:2010/api/cart', 
+        { medicineId, quantity: newQuantity }, 
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
 
-      setCartItems(prev =>
-        prev.map(item =>
+      setCartItems(prevCart =>
+        prevCart.map(item =>
           item.medicineId._id === medicineId ? { ...item, quantity: newQuantity } : item
         )
       );
     } catch (error) {
-      addNotification(error.response?.data?.message || 'Failed to update quantity', 'error');
+      console.error('Error updating cart:', error.response?.data || error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const calculateTotal = () => {
-    return cartItems.reduce((total, item) => total + (item.medicineId.price * item.quantity), 0).toFixed(2);
+  const totalAmount = useMemo(() => {
+    return cartItems.reduce((sum, item) => sum + item.medicineId.price * item.quantity, 0);
+  }, [cartItems]);
+
+  const handleProceedToPayment = () => {
+    navigate('/payment'); // Redirect to payment page
   };
 
-  if (loading) return <p>Loading...</p>;
-
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-4 py-8 min-h-screen">
-      <h2 className="text-3xl font-bold mb-8 text-gray-800">Shopping Cart</h2>
+    <div className="max-w-3xl mx-auto p-6">
+      <h2 className="text-3xl font-bold mb-6">Your Cart</h2>
 
-      {cartItems.map(item => (
-        <div key={item.medicineId._id} className="flex justify-between p-4 bg-white rounded-md shadow-md mb-4">
-          <p>{item.medicineId.name} - ${item.medicineId.price.toFixed(2)}</p>
-          <div className="flex items-center gap-3">
-            <button onClick={() => handleQuantityChange(item.medicineId._id, item.quantity - 1)}><FaMinus /></button>
-            <span>{item.quantity}</span>
-            <button onClick={() => handleQuantityChange(item.medicineId._id, item.quantity + 1)}><FaPlus /></button>
+      {cartItems.length === 0 ? (
+        <p className="text-gray-600">Your cart is empty.</p>
+      ) : (
+        <div className="space-y-4">
+          {cartItems.map((item) => (
+            <div key={item.medicineId._id} className="bg-white shadow-md rounded-lg p-4 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold">{item.medicineId.name}</h3>
+                <p className="text-gray-600">${item.medicineId.price.toFixed(2)} each</p>
+                <p className="text-gray-800 font-medium">Subtotal: ${(item.medicineId.price * item.quantity).toFixed(2)}</p>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <button 
+                  onClick={() => updateQuantity(item.medicineId._id, item.quantity - 1)}
+                  className="bg-gray-200 px-3 py-1 rounded-lg hover:bg-gray-300"
+                  disabled={loading}
+                >-</button>
+
+                <span className="text-lg">{item.quantity}</span>
+
+                <button 
+                  onClick={() => updateQuantity(item.medicineId._id, item.quantity + 1)}
+                  className="bg-gray-200 px-3 py-1 rounded-lg hover:bg-gray-300"
+                  disabled={loading}
+                >+</button>
+              </div>
+            </div>
+          ))}
+
+          {/* Total Amount Section */}
+          <div className="bg-white shadow-md rounded-lg p-4 mt-4 flex justify-between items-center">
+            <h3 className="text-xl font-bold">Total Amount:</h3>
+            <span className="text-xl font-semibold text-primary-600">${totalAmount.toFixed(2)}</span>
           </div>
-        </div>
-      ))}
 
-      <p className="text-xl font-bold">Total: ${calculateTotal()}</p>
-    </motion.div>
+          {/* Proceed to Payment Button */}
+          <button
+  onClick={handleProceedToPayment}
+  className="mt-6 bg-primary-500 text-black px-6 py-2 rounded-lg border-2 border-primary-600 hover:bg-primary-600 hover:border-primary-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 active:shadow-md"
+>
+  Proceed to Payment
+</button>
+
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -7,13 +7,19 @@ const router = express.Router();
 // Get cart items for a user
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    console.log("Fetching cart for User ID:", req.user.id); // Debugging user ID
-    const cart = await Cart.findOne({ userId: req.user.id }).populate('items.medicineId');
+    const userId = req.user.id;
+    console.log("Fetching cart for user:", userId);
+
+    const cart = await Cart.findOne({ userId }).populate('items.medicineId');
+    
+    console.log("Cart found:", JSON.stringify(cart, null, 2)); // ✅ Log full cart
     res.json(cart || { items: [] });
   } catch (error) {
+    console.error("Error fetching cart:", error);
     res.status(500).json({ message: error.message });
   }
 });
+
 
 // Add an item to the cart
 router.post('/', authMiddleware, async (req, res) => {

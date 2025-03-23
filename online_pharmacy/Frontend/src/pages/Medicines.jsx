@@ -13,6 +13,8 @@ const Medicines = () => {
   const { addNotification } = useNotification();
   const { setCartItems, cartItems } = useCart();
   const { user } = useAuth();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     const fetchMedicines = async () => {
@@ -20,7 +22,7 @@ const Medicines = () => {
         const { data } = await axios.get('https://online-pharmacy-ps8n.onrender.com/api/medicines');
         setMedicines(data);
       } catch (error) {
-        addNotification('Failed to load medicines', 'error');
+        addNotification('Failed to load medicines', error);
       } finally {
         setLoading(false);
       }
@@ -43,11 +45,7 @@ const Medicines = () => {
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}`} }
       );
 
-      console.log("Updated Cart Data:", data); // Debugging cart response
-
-      // Update cart state with new data from backend
       setCartItems(data.items);
-
       addNotification('Added to cart', 'success');
     } catch (error) {
       addNotification(error.response?.data?.message || 'Failed to add to cart', 'error');
@@ -56,12 +54,18 @@ const Medicines = () => {
 
   if (loading) return <LoadingSpinner fullScreen />;
 
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentMedicines = medicines.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(medicines.length / itemsPerPage);
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold text-gray-900 mb-8">All Medicines</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {medicines.map((medicine, index) => (
+        {currentMedicines.map((medicine, index) => (
           <motion.div
             key={medicine._id}
             initial={{ opacity: 0, y: 20 }}
@@ -92,6 +96,25 @@ const Medicines = () => {
             </div>
           </motion.div>
         ))}
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center mt-8 space-x-4">
+        <button
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(prev => prev - 1)}
+          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="text-gray-800 font-semibold">Page {currentPage} of {totalPages}</span>
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(prev => prev + 1)}
+          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
     </motion.div>
   );

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { FaBars, FaTimes, FaShoppingCart, FaUser, FaPills } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -8,6 +8,18 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
+  const [currentUser, setCurrentUser] = useState(user);
+  const location = useLocation(); // Get the current location
+
+  useEffect(() => {
+    setCurrentUser(user);
+  }, [user]);
+
+  const handleLogout = () => {
+    logout();
+    setCurrentUser(null); // Immediately update the state
+    localStorage.removeItem("pageRefreshed"); // Remove refresh flag when logging out
+  };
 
   const menuItems = [
     { name: 'Home', path: '/' },
@@ -61,20 +73,26 @@ const Navbar = () => {
           </div>
 
           <div className="hidden md:flex md:items-center">
-            {user ? (
+            {currentUser ? (
               <div className="ml-4 relative">
-                <button className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-900">
-                  <span className="mr-1">{user.name}</span>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-900"
+                >
+                  <span className="mr-1">{currentUser.name}</span>
                   <FaUser className="h-5 w-5" />
                 </button>
               </div>
             ) : (
-              <Link
-                to="/login"
-                className="ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100"
-              >
-                Login
-              </Link>
+              // Hide the login button if the user is already on the login page
+              location.pathname !== "/login" && (
+                <Link
+                  to="/login"
+                  className="ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100"
+                >
+                  Login
+                </Link>
+              )
             )}
           </div>
         </div>
@@ -102,9 +120,9 @@ const Navbar = () => {
                 </div>
               </NavLink>
             ))}
-            {user ? (
+            {currentUser ? (
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100"
               >
                 Logout
