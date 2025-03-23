@@ -1,82 +1,141 @@
-import { useContext, useEffect, useState } from 'react';
-import axios from 'axios';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
+import { Link, NavLink } from 'react-router-dom';
+import { FaBars, FaTimes, FaShoppingCart, FaUser, FaPills } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { useNotification } from '../context/NotificationContext';
-import { FaPlus, FaMinus } from 'react-icons/fa';
 
-const Cart = () => {
-  const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
-  const { addNotification } = useNotification();
-  const { cartItems, setCartItems } = useCart();
-  const [loading, setLoading] = useState(true);
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const { cartCount } = useCart();
+  const [currentUser, setCurrentUser] = useState(user);
 
   useEffect(() => {
-    const fetchCart = async () => {
-      try {
-        if (!user) {
-          addNotification('Please login to view your cart', 'warning');
-          navigate('/login');
-          return;
-        }
+    setCurrentUser(user);
+  }, [user]);
 
-        const { data } = await axios.get('/api/cart', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-
-        setCartItems(data.items || []);
-      } catch (error) {
-        addNotification(error.response?.data?.message || 'Failed to load cart', 'error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCart();
-  }, [user, setCartItems, addNotification, navigate]);
-
-  const handleQuantityChange = async (medicineId, newQuantity) => {
-    if (newQuantity < 1) return;
-
-    try {
-      const response = await axios.post('/api/cart', { medicineId, quantity: newQuantity }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      
-      // Update cart state with latest response from backend
-      setCartItems(response.data.items || []);
-    } catch (error) {
-      addNotification(error.response?.data?.message || 'Failed to update quantity', 'error');
-    }
+  const handleLogout = () => {
+    logout();
+    setCurrentUser(null);
   };
 
-  const calculateTotal = () => {
-    return cartItems.reduce((total, item) => total + (item.medicineId.price * item.quantity), 0).toFixed(2);
-  };
-
-  if (loading) return <p>Loading...</p>;
+  const menuItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Medicines', path: '/medicines' },
+    { name: 'Cart', path: '/cart', icon: <FaShoppingCart />, count: cartCount },
+    { name: 'Profile', path: '/profile', icon: <FaUser /> }
+  ];
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-4 py-8 min-h-screen mt-24">
-      <h2 className="text-3xl font-bold mb-8 text-gray-800">Shopping Cart</h2>
+    <nav className="bg-white shadow-lg fixed w-full z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link to="/" className="flex-shrink-0 flex items-center">
+              <FaPills className="h-8 w-8 text-primary-600" />
+              <span className="ml-2 text-xl font-bold text-gray-800">PharmaCare</span>
+            </Link>
+            
+            <div className="hidden md:flex md:items-center md:ml-6">
+              {menuItems.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.path}
+                  className={({ isActive }) => 
+                    `px-3 py-2 rounded-md text-sm font-medium flex items-center ${
+                      isActive 
+                        ? 'text-primary-600 bg-gray-100' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`
+                  }
+                >
+                  {item.icon && <span className="mr-1">{item.icon}</span>}
+                  {item.name}
+                  {item.count > 0 && item.name === 'Cart' && (
+                    <span className="ml-1 bg-primary-500 text-white rounded-full px-2 py-1 text-xs">
+                      {item.count}
+                    </span>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          </div>
 
-      {cartItems.map(item => (
-        <div key={item.medicineId._id} className="flex justify-between p-4 bg-white rounded-md shadow-md mb-4">
-          <p>{item.medicineId.name} - ${item.medicineId.price.toFixed(2)}</p>
-          <div className="flex items-center gap-3">
-            <button onClick={() => handleQuantityChange(item.medicineId._id, item.quantity - 1)}><FaMinus /></button>
-            <span>{item.quantity}</span>
-            <button onClick={() => handleQuantityChange(item.medicineId._id, item.quantity + 1)}><FaPlus /></button>
+          <div className="flex items-center md:hidden">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            >
+              {isOpen ? <FaTimes className="h-6 w-6" /> : <FaBars className="h-6 w-6" />}
+            </button>
+          </div>
+
+          <div className="hidden md:flex md:items-center">
+            {currentUser ? (
+              <div className="ml-4 relative">
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-900"
+                >
+                  <span className="mr-1">{currentUser.name}</span>
+                  <FaUser className="h-5 w-5" />
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className="ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
-      ))}
+      </div>
 
-      <p className="text-xl font-bold">Total: ${calculateTotal()}</p>
-    </motion.div>
+      {/* Mobile Menu */}
+      {isOpen && (
+        <div className="md:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            {menuItems.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.path}
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100"
+                onClick={() => setIsOpen(false)}
+              >
+                <div className="flex items-center">
+                  {item.icon && <span className="mr-2">{item.icon}</span>}
+                  {item.name}
+                  {item.count > 0 && item.name === 'Cart' && (
+                    <span className="ml-2 bg-primary-500 text-white rounded-full px-2 py-1 text-xs">
+                      {item.count}
+                    </span>
+                  )}
+                </div>
+              </NavLink>
+            ))}
+            {currentUser ? (
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100"
+                onClick={() => setIsOpen(false)}
+              >
+                Login
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </nav>
   );
 };
 
-export default Cart;
+export default Navbar;

@@ -22,6 +22,7 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       localStorage.removeItem('token');
+      console.error('Error fetching auth status:', error); // Debugging line
     } finally {
       setLoading(false);
     }

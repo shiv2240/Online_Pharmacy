@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -28,6 +28,15 @@ const Payment = lazy(() => import('./components/Payment'));  // Import the Payme
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+    if (storedUserId) {
+      setUserId(storedUserId);
+    }
+  }, []);
+
   return (
     <Router>
       <CartProvider>
@@ -43,13 +52,18 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/payment" element={<Payment />} />
+                  
+                  {/* Pass the userId to Payment */}
+                  <Route 
+                    path="/payment" 
+                    element={<Payment/>} 
+                  />
 
                   {/* Protected Routes */}
                   <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
                   <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                  <Route path="/success" element={<ProtectedRoute><Success/></ProtectedRoute>}/>
+                  <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
 
                   {/* Footer Pages */}
                   <Route path="/terms" element={<Terms />} />

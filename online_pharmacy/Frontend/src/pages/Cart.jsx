@@ -2,17 +2,40 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const { cartItems, setCartItems } = useCart();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate(); // Initialize navigate hook
+  const navigate = useNavigate();
+
+  // Fetch user data from localStorage if not available in context
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token && !user) {
+      // Get user data using token if it's not already in context
+      const fetchUser = async () => {
+        try {
+          const response = await axios.get('http://localhost:2010/api/user', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setUser(response.data);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      };
+
+      fetchUser();
+    } else if (!token) {
+      navigate('/login'); // Redirect if there's no token
+    }
+  }, [user, navigate, setUser]);
 
   useEffect(() => {
     const fetchCart = async () => {
-      if (!user) return;
+      if (!user) return; // Don't fetch if user isn't logged in
+
       try {
         setLoading(true);
         const { data } = await axios.get('http://localhost:2010/api/cart', {
@@ -21,20 +44,24 @@ const Cart = () => {
         setCartItems(data.items || []);
       } catch (error) {
         console.error('Error fetching cart:', error.response?.data || error);
+        // Optional: redirect if there's an issue with the cart
+        if (error.response?.status === 401) {
+          navigate('/login');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchCart();
-  }, [user, setCartItems]);
+  }, [user, setCartItems, navigate]);
 
   const updateQuantity = async (medicineId, newQuantity) => {
     if (newQuantity < 1) return;
 
     setLoading(true);
     try {
-      await axios.post('http://localhost:2010/api/cart', 
+      await axios.post('https://online-pharmacy-ps8n.onrender.com/api/cart', 
         { medicineId, quantity: newQuantity }, 
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -101,11 +128,11 @@ const Cart = () => {
 
           {/* Proceed to Payment Button */}
           <button
-  onClick={handleProceedToPayment}
-  className="mt-6 bg-primary-500 text-black px-6 py-2 rounded-lg border-2 border-primary-600 hover:bg-primary-600 hover:border-primary-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 active:shadow-md"
->
-  Proceed to Payment
-</button>
+            onClick={handleProceedToPayment}
+            className="mt-6 bg-primary-500 text-black px-6 py-2 rounded-lg border-2 border-primary-600 hover:bg-primary-600 hover:border-primary-700 transform transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95 active:shadow-md"
+          >
+            Proceed to Payment
+          </button>
 
         </div>
       )}
