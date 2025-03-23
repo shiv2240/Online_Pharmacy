@@ -23,8 +23,15 @@ export function AuthProvider({ children }) {
   }
 
   function login(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
+    return signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        return userCredential.user;
+      })
+      .catch((error) => {
+        throw error;
+      });
   }
+  
 
   function logout() {
     return signOut(auth);

@@ -60,7 +60,8 @@ function Navbar() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-black bg-white border border-black px-3 py-2 rounded-md text-sm font-medium transition duration-300 
+             hover:text-white hover:bg-primary-600 hover:shadow-lg hover:scale-105"
                 >
                   <FaSignOutAlt className="inline-block mr-1" />
                   Logout
