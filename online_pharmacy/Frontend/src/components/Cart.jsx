@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useNotification } from '../context/NotificationContext';
-import { FaPlus, FaMinus, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaMinus } from 'react-icons/fa';
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -42,15 +42,12 @@ const Cart = () => {
     if (newQuantity < 1) return;
 
     try {
-      await axios.post('/api/cart', { medicineId, quantity: newQuantity }, {
+      const response = await axios.post('/api/cart', { medicineId, quantity: newQuantity }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-
-      setCartItems(prev =>
-        prev.map(item =>
-          item.medicineId._id === medicineId ? { ...item, quantity: newQuantity } : item
-        )
-      );
+      
+      // Update cart state with latest response from backend
+      setCartItems(response.data.items || []);
     } catch (error) {
       addNotification(error.response?.data?.message || 'Failed to update quantity', 'error');
     }
@@ -63,7 +60,7 @@ const Cart = () => {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-4 py-8 min-h-screen">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-4 py-8 min-h-screen mt-24">
       <h2 className="text-3xl font-bold mb-8 text-gray-800">Shopping Cart</h2>
 
       {cartItems.map(item => (

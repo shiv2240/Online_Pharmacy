@@ -7,8 +7,8 @@ const router = express.Router();
 // Get cart items for a user
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.id;
-    const cart = await Cart.findOne({ userId }).populate('items.medicineId');
+    console.log("Fetching cart for User ID:", req.user.id); // Debugging user ID
+    const cart = await Cart.findOne({ userId: req.user.id }).populate('items.medicineId');
     res.json(cart || { items: [] });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -34,9 +34,13 @@ router.post('/', authMiddleware, async (req, res) => {
       cart.items.push({ medicineId, quantity });
     }
 
-    await cart.save();
-    res.status(201).json(cart);
+    // Force MongoDB to return updated cart
+    const updatedCart = await cart.save();
+    const populatedCart = await Cart.findById(updatedCart._id).populate('items.medicineId');
+
+    res.status(201).json(populatedCart);
   } catch (error) {
+    console.error("Error updating cart:", error);
     res.status(500).json({ message: error.message });
   }
 });

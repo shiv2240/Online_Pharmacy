@@ -1,19 +1,15 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from './LoadingSpinner';
 
-function ProtectedRoute({ children }) {
-  const { currentUser, loading } = useAuth();
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
 
   if (loading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner fullScreen />;
   }
 
-  if (!currentUser) {
-    return <Navigate to="/login" />;
-  }
-
-  return children;
-}
+  return user ? children : <Navigate to="/login" replace />;
+};
 
 export default ProtectedRoute;

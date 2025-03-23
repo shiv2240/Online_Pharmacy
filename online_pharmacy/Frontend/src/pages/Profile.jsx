@@ -1,159 +1,142 @@
-import { useState, useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
-import { doc, getDoc } from "firebase/firestore";
-import { ref, get } from "firebase/database";
-import { db, realtimeDb } from "../firebase/config";
-import { useAuth } from "../contexts/AuthContext";
-import LoadingSpinner from "../components/LoadingSpinner";
+import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
+import axios from 'axios';
+import { motion } from 'framer-motion';
 
-function Profile() {
-  const { currentUser } = useAuth();
-  const [userData, setUserData] = useState(null);
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const location = useLocation();
-  const ordersRef = useRef(null);
+const profileSchema = Yup.object().shape({
+  name: Yup.string().required('Required'),
+  email: Yup.string().email('Invalid email').required('Required'),
+  medicalHistory: Yup.string(),
+  allergies: Yup.string()
+});
 
-  useEffect(() => {
-    if (!currentUser) {
-      setLoading(false);
-      return;
-    }
-    fetchUserData();
-    fetchOrders();
-  }, [currentUser]);
+const Profile = () => {
+  const { user, logout } = useAuth();
+  const [prescriptions, setPrescriptions] = useState([]);
 
   useEffect(() => {
-    if (new URLSearchParams(location.search).get("tab") === "orders" && ordersRef.current) {
-      ordersRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [orders]);
-
-  const fetchUserData = async () => {
-    try {
-      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-      if (userDoc.exists()) {
-        setUserData(userDoc.data());
+    const fetchPrescriptions = async () => {
+      try {
+        const res = await axios.get('/api/prescriptions');
+        setPrescriptions(res.data);
+      } catch (error) {
+        console.error(error);
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  };
+    };
+    
+    if (user) fetchPrescriptions();
+  }, [user]);
 
-  const fetchOrders = async () => {
+  const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      const snapshot = await get(ref(realtimeDb, "orders"));
-      if (snapshot.exists()) {
-        const ordersData = Object.values(snapshot.val()).filter((o) => o.userId === currentUser.uid);
-        setOrders(ordersData);
-      } else {
-        setOrders([]);
-      }
+      await axios.put('/api/users/profile', values);
+      // Handle success
     } catch (error) {
-      console.error("Error fetching orders:", error);
+      console.error(error);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
-
-  if (loading) {
-    return <LoadingSpinner />;
-  }
 
   return (
-    <div className="w-screen mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-lg shadow-md p-6 mb-8"
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="max-w-4xl mx-auto px-4 py-8"
+    >
+      <Formik
+        initialValues={{
+          name: user?.name || '',
+          email: user?.email || '',
+          medicalHistory: '',
+          allergies: ''
+        }}
+        validationSchema={profileSchema}
+        onSubmit={handleSubmit}
       >
-        <h1 className="text-3xl font-bold mb-6">Profile</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
-            <p className="text-gray-600">Email: {currentUser?.email || "N/A"}</p>
-            {userData && (
-              <>
-                <p className="text-gray-600">Name: {userData.name || "N/A"}</p>
-                <p className="text-gray-600">Phone: {userData.phone || "N/A"}</p>
-              </>
-            )}
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Default Shipping Address</h2>
-            {userData?.address ? (
-              <>
-                <p className="text-gray-600">{userData.address.street}</p>
-                <p className="text-gray-600">
-                  {userData.address.city}, {userData.address.state}
-                </p>
-                <p className="text-gray-600">{userData.address.postalCode}</p>
-              </>
-            ) : (
-              <p className="text-gray-600">No address on file.</p>
-            )}
-          </div>
-        </div>
-      </motion.div>
+        {({ isSubmitting, errors, touched }) => (
+          <Form className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium">Name</label>
+                <Field
+                  name="name"
+                  className="mt-1 block w-full rounded-md border p-2"
+                />
+                {errors.name && touched.name && (
+                  <div className="text-red-500 text-sm">{errors.name}</div>
+                )}
+              </div>
 
-      {/* Order History Section */}
-      <div className="bg-white rounded-lg shadow-md p-6" ref={ordersRef}>
-        <h2 className="text-2xl font-bold mb-6">Order History</h2>
-        {orders.length === 0 ? (
-          <p className="text-gray-600">No orders found</p>
-        ) : (
-          <div className="space-y-6">
-          {orders.map((order, index) => (
-  <motion.div
-    key={order?.id || index}
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="border rounded-lg p-4"
-  >
-    <div className="flex justify-between items-center mb-4">
-      <h3 className="text-lg font-semibold">
-        Order #{order?.id ? order.id.slice(0, 8) : "Unknown"}
-      </h3>
-      <span
-        className={`px-3 py-1 rounded-full text-sm ${
-          order?.status === "delivered"
-            ? "bg-green-100 text-green-800"
-            : order?.status === "processing"
-            ? "bg-yellow-100 text-yellow-800"
-            : "bg-gray-100 text-gray-800"
-        }`}
-      >
-        {order?.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : "Pending"}
-      </span>
-    </div>
-    <div className="text-gray-600">
-      <p><strong>Name:</strong> {order?.name || "N/A"}</p>
-      <p><strong>Email:</strong> {order?.email || "N/A"}</p>
-      <p><strong>Date:</strong> {order?.createdAt ? new Date(order.createdAt).toLocaleDateString() : "Unknown"}</p>
-      <p><strong>Shipping Address:</strong> {order?.address || "N/A"}</p>
-      <p><strong>Total:</strong> ${order?.total ? order.total.toFixed(2) : "0.00"}</p>
-      <p><strong>Products:</strong></p>
-      <ul className="list-disc pl-5">
-        {order?.products
-          ? Object.values(order.products).map((product, idx) => (
-              <li key={idx}>
-                {product.name} - ${product.price.toFixed(2)} x {product.quantity}
-              </li>
-            ))
-          : <li>No products found</li>
-        }
-      </ul>
-    </div>
-  </motion.div>
-))}
+              <div>
+                <label className="block text-sm font-medium">Email</label>
+                <Field
+                  name="email"
+                  type="email"
+                  className="mt-1 block w-full rounded-md border p-2"
+                />
+                {errors.email && touched.email && (
+                  <div className="text-red-500 text-sm">{errors.email}</div>
+                )}
+              </div>
+            </div>
 
+            <div>
+              <label className="block text-sm font-medium">Medical History</label>
+              <Field
+                as="textarea"
+                name="medicalHistory"
+                className="mt-1 block w-full rounded-md border p-2 h-32"
+              />
+            </div>
 
-          </div>
+            <div>
+              <label className="block text-sm font-medium">Allergies</label>
+              <Field
+                name="allergies"
+                className="mt-1 block w-full rounded-md border p-2"
+              />
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-primary-500 text-white px-6 py-2 rounded-md"
+            >
+              Update Profile
+            </motion.button>
+          </Form>
         )}
+      </Formik>
+
+      <div className="mt-12">
+        <h3 className="text-xl font-bold mb-4">Prescription History</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {prescriptions.map((prescription, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="border rounded-lg overflow-hidden"
+            >
+              <img
+                src={prescription.filePath}
+                alt={`Prescription ${index + 1}`}
+                className="w-full h-40 object-cover"
+              />
+              <div className="p-2 text-sm text-gray-600">
+                {new Date(prescription.createdAt).toLocaleDateString()}
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
-}
+};
 
 export default Profile;

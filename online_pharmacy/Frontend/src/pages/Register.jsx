@@ -1,27 +1,26 @@
 import { Formik, Form, Field } from 'formik';
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';  // Import useNavigate
+import { Link } from 'react-router-dom';
 import * as Yup from 'yup';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 
-const loginSchema = Yup.object().shape({
+const registerSchema = Yup.object().shape({
+  name: Yup.string().required('Required'),
   email: Yup.string().email('Invalid email').required('Required'),
-  password: Yup.string().required('Required')
+  password: Yup.string().min(6, 'Too short').required('Required')
 });
 
-const Login = () => {
-  const { login } = useAuth();
+const Register = () => {
+  const { register } = useAuth();
   const { addNotification } = useNotification();
-  const navigate = useNavigate(); // Initialize navigate
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      await login(values.email, values.password);
-      addNotification('Login successful', 'success');
-      navigate('/'); // Redirect to home page
+      await register(values.name, values.email, values.password);
+      addNotification('Registration successful', 'success');
     } catch (error) {
-      addNotification(error.response?.data?.message || 'Login failed', 'error');
+      addNotification(error.response?.data?.message || 'Registration failed', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -35,17 +34,28 @@ const Login = () => {
     >
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
         <div className="text-center">
-          <h2 className="text-3xl font-bold">Welcome Back</h2>
-          <p className="mt-2 text-gray-600">Sign in to your account</p>
+          <h2 className="text-3xl font-bold">Create Account</h2>
+          <p className="mt-2 text-gray-600">Join our pharmacy community</p>
         </div>
 
         <Formik
-          initialValues={{ email: '', password: '' }}
-          validationSchema={loginSchema}
+          initialValues={{ name: '', email: '', password: '' }}
+          validationSchema={registerSchema}
           onSubmit={handleSubmit}
         >
           {({ isSubmitting, errors, touched }) => (
             <Form className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium">Name</label>
+                <Field
+                  name="name"
+                  className="mt-1 block w-full rounded-md border p-2"
+                />
+                {errors.name && touched.name && (
+                  <div className="text-red-500 text-sm">{errors.name}</div>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium">Email</label>
                 <Field
@@ -71,53 +81,20 @@ const Login = () => {
               </div>
 
               <button
-  type="submit"
-  disabled={isSubmitting}
-  className={`w-full py-3 rounded-lg font-semibold text-lg text-black
-             transition-all duration-300 flex justify-center items-center
-             ${
-               isSubmitting
-                 ? 'bg-gray-400 cursor-not-allowed'
-                 : 'bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-md hover:shadow-lg transform hover:scale-105 border border-gray-300'
-             }`}
->
-  {isSubmitting ? (
-    <span className="flex items-center">
-      <svg
-        className="animate-spin h-5 w-5 mr-2 text-black"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        ></circle>
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v8H4z"
-        ></path>
-      </svg>
-      Signing In...
-    </span>
-  ) : (
-    'Sign In'
-  )}
-</button>
-
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-primary-500 text-white py-2 rounded-md hover:bg-primary-600 transition-colors"
+              >
+                Create Account
+              </button>
             </Form>
           )}
         </Formik>
 
         <div className="text-center">
-          <span className="text-gray-600">Don't have an account? </span>
-          <Link to="/register" className="text-primary-500 hover:underline">
-            Register here
+          <span className="text-gray-600">Already have an account? </span>
+          <Link to="/login" className="text-primary-500 hover:underline">
+            Login here
           </Link>
         </div>
       </div>
@@ -125,4 +102,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

@@ -1,25 +1,7 @@
-import { motion } from 'framer-motion';
-import { FaHeartbeat } from 'react-icons/fa';
-
-function LoadingSpinner() {
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50">
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          rotate: [0, 180, 360],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-        className="text-primary-600 text-4xl"
-      >
-        <FaHeartbeat />
-      </motion.div>
-    </div>
-  );
-}
-
-export default LoadingSpinner;
+export default function LoadingSpinner({ fullScreen = false }) {
+    return (
+      <div className={`flex items-center justify-center ${fullScreen ? 'h-screen' : 'h-40'}`}>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      </div>
+    );
+  }
