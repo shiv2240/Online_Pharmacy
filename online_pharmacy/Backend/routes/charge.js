@@ -42,10 +42,12 @@ router.post('/', async (req, res) => {
       message: 'Payment successful',
       orderId: newOrder._id, // Send the order ID back
     });
-  } catch (error) {
-    console.error('Payment error:', error);
+} catch (error) {
+    console.error('Payment error:', error.message);  // Log the error message
+    console.error(error.stack);  // Log the stack trace
     res.status(500).json({ message: 'Payment failed. Please try again.' });
-  }
+}
+
 });
 
 module.exports = router;
