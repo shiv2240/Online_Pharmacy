@@ -9,10 +9,88 @@ Frontend | Fullstack
 ## Deployed App
 - Frontend: [Online_Pharmacy-2](https://online-pharmacy-2.netlify.app/)
 - Backend: [Online_Pharmacy](https://online-pharmacy-ps8n.onrender.com)
-- Database: [MongoDB](mongodb+srv://shivsahni2240:e51j4i1P2qxscoYZ@myplace.moobold.mongodb.net/)
+- Database: [MongoDB](mongodb+srv://shivsahni2240:YourPass@myplace.moobold.mongodb.net/)
 
 ## Directory Structure
-
+online_pharmacy{
+Backend{
+📦Backend
+ ┣ 📂config
+ ┃ ┗ 📜db.js
+ ┣ 📂middleware
+ ┃ ┗ 📜authMiddleware.js
+ ┣ 📂models
+ ┃ ┣ 📜Cart.js
+ ┃ ┣ 📜Medicine.js
+ ┃ ┣ 📜Order.js
+ ┃ ┗ 📜User.js
+┣ 📂routes
+ ┃ ┣ 📜auth.js
+ ┃ ┣ 📜cart.js
+ ┃ ┣ 📜charge.js
+ ┃ ┣ 📜medicines.js
+ ┃ ┣ 📜orders.js
+ ┃ ┗ 📜upload.js
+ ┣ 📂src
+ ┃ ┗ 📂pages
+ ┃ ┃ ┗ 📜Register.jsx
+ ┣ 📂uploads
+ ┣ 📜.env
+ ┣ 📜.gitignore
+ ┣ 📜package-lock.json
+ ┣ 📜package.json
+ ┣ 📜readme.md
+ ┗ 📜server.js}
+Fronend{
+📦src
+ ┣ 📂assets
+ ┃ ┗ 📜react.svg
+ ┣ 📂components
+ ┃ ┣ 📜Cart.jsx
+ ┃ ┣ 📜ErrorBoundary.jsx
+ ┃ ┣ 📜Footer.jsx
+ ┃ ┣ 📜GenericPage.jsx
+ ┃ ┣ 📜LoadingSpinner.jsx
+ ┃ ┣ 📜Navbar.jsx
+ ┃ ┣ 📜Payment.jsx
+ ┃ ┣ 📜PrescriptionUpload.jsx
+ ┃ ┣ 📜ProtectedRoute.jsx
+ ┃ ┣ 📜Skeleton.jsx
+ ┃ ┗ 📜Success.jsx
+ ┣ 📂context
+ ┃ ┣ 📜AuthContext.jsx
+ ┃ ┣ 📜CartContext.jsx
+ ┃ ┣ 📜NotificationContext.jsx
+ ┃ ┗ 📜UserContext.js
+ ┣ 📂images
+ ┃ ┗ 📜17843.jpg
+ ┣ 📂pages
+ ┃ ┣ 📜About.jsx
+ ┃ ┣ 📜Cart.jsx
+ ┃ ┣ 📜Checkout.jsx
+ ┃ ┣ 📜Contact.jsx
+ ┃ ┣ 📜Home.jsx
+ ┃ ┣ 📜Login.jsx
+ ┃ ┣ 📜MedicineDetails.jsx
+ ┃ ┣ 📜Medicines.jsx
+ ┃ ┣ 📜NotFound.jsx
+ ┃ ┣ 📜Orders.jsx
+ ┃ ┣ 📜PrivacyPolicy.jsx
+ ┃ ┣ 📜Profile.jsx
+ ┃ ┣ 📜Register.jsx
+ ┃ ┗ 📜Terms.jsx
+ ┣ 📜App.css
+ ┣ 📜App.jsx
+ ┣ 📜index.css
+ ┗ 📜main.jsx
+ ┣ 📜.gitignore
+ ┣ 📜eslint.config.js
+ ┣ 📜index.html
+ ┣ 📜package-lock.json
+ ┣ 📜package.json
+ ┣ 📜README.md
+ ┗ 📜vite.config.js}
+}
 
 
 
