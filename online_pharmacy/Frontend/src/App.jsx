@@ -55,9 +55,10 @@ function App() {
                   
                   {/* Pass the userId to Payment */}
                   <Route 
-                    path="/payment" 
-                    element={<Payment/>} 
-                  />
+  path="/payment" 
+  element={<Payment userId={localStorage.getItem('userId')} />} 
+/>
+
 
                   {/* Protected Routes */}
                   <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />

@@ -18,7 +18,9 @@ const Login = () => {
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      await login(values.email, values.password);
+      const response = await login(values.email, values.password); // Assuming login returns user data
+      const userId = response.data.userId;  // Adjust based on your actual response structure
+      localStorage.setItem('userId', userId);  // Store userId in localStorage
       addNotification('Login successful', 'success');
       navigate('/'); // Redirect to home page
     } catch (error) {
@@ -27,6 +29,7 @@ const Login = () => {
       setSubmitting(false);
     }
   };
+  
 
   return (
     <motion.div
