@@ -20,10 +20,10 @@ const PaymentPage = () => {
       const response = await axios.post(
         'https://online-pharmacy-ps8n.onrender.com/api/charge', // Update with your backend URL
         {
-          cartItems, // Pass cart items for payment processing
+          cartItems// Pass cart items for payment processing
         }
       );
-      
+      console.log("backendData",response.data)
       // If payment is successful
       console.log("Payment successful!");
 
