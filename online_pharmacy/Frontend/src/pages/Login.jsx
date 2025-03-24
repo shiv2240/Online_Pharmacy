@@ -1,6 +1,6 @@
 import { Formik, Form, Field } from 'formik';
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom'; 
+import { Link, useNavigate } from 'react-router-dom';
 import * as Yup from 'yup';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -12,24 +12,27 @@ const loginSchema = Yup.object().shape({
 });
 
 const Login = () => {
-  const { login } = useAuth();
-  const { addNotification } = useNotification();
-  const navigate = useNavigate();
+  const { login } = useAuth(); // Login function from context
+  const { addNotification } = useNotification(); // Notification function from context
+  const navigate = useNavigate(); // To navigate to different routes after login
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       const response = await login(values.email, values.password); // Assuming login returns user data
-      const userId = response.data.userId;  // Adjust based on your actual response structure
-      localStorage.setItem('userId', userId);  // Store userId in localStorage
-      addNotification('Login successful', 'success');
-      navigate('/'); // Redirect to home page
+      if (response && response.user) {
+        const userId = response.user._id; // Assuming 'user' contains _id
+        localStorage.setItem('userId', userId); // Store userId in localStorage
+        addNotification('Login successful', 'success');
+        navigate('/'); // Redirect to home page after successful login
+      } else {
+        addNotification('Login failed, please try again', 'error'); // Handle failure
+      }
     } catch (error) {
-      addNotification(error.response?.data?.message || 'Login failed', 'error');
+      addNotification(error.response?.data?.message || 'Login failed', 'error'); // Error notification
     } finally {
-      setSubmitting(false);
+      setSubmitting(false); // Reset submitting state
     }
   };
-  
 
   return (
     <motion.div

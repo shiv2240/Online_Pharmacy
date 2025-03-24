@@ -19,7 +19,7 @@ router.post("/register", async (req, res) => {
     const newUser = new User({ name, email, password: hashedPassword });
     await newUser.save();
 
-    res.status(201).json({ message: "User created" });
+    res.status(201).json({ message: "User created", user: newUser }); // Returning user data
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -39,7 +39,7 @@ router.post("/login", async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.json({ token, user }); // Add user data here
+    res.json({ token, user }); // Returning both token and user data
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
