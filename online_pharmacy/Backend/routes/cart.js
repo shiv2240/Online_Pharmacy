@@ -26,6 +26,10 @@ router.post('/', authMiddleware, async (req, res) => {
     const { medicineId, quantity } = req.body;
     const userId = req.user.id;
 
+    if (!medicineId || !quantity) {
+      return res.status(400).json({ message: 'Missing medicineId or quantity' });
+    }
+
     let cart = await Cart.findOne({ userId });
 
     if (!cart) {
@@ -39,11 +43,12 @@ router.post('/', authMiddleware, async (req, res) => {
       cart.items.push({ medicineId, quantity });
     }
 
-    // Force MongoDB to return updated cart
     const updatedCart = await cart.save();
     const populatedCart = await Cart.findById(updatedCart._id).populate('items.medicineId');
-
+    
+    console.log("Updated Cart:", JSON.stringify(populatedCart, null, 2));
     res.status(201).json(populatedCart);
+
   } catch (error) {
     console.error("Error updating cart:", error);
     res.status(500).json({ message: error.message });
@@ -63,17 +68,19 @@ router.delete('/:medicineId', authMiddleware, async (req, res) => {
 
     res.json(cart);
   } catch (error) {
+    console.error("Error removing item from cart:", error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// Clear the entire cart (correct DELETE route)
+// Clear the entire cart
 router.delete('/', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
     await Cart.findOneAndDelete({ userId });
     res.json({ message: 'Cart cleared' });
   } catch (error) {
+    console.error("Error clearing cart:", error);
     res.status(500).json({ message: error.message });
   }
 });
