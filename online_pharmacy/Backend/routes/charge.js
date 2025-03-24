@@ -6,8 +6,7 @@ const router = express.Router();
 // POST request for handling payment
 router.post('/', async (req, res) => {
   try {
-    // Get cartItems from request body
-    const { cartItems } = req.body;
+    const { userId, cartItems } = req.body; // Extract userId from the request body
 
     // Check if cartItems is provided and has content
     if (!cartItems || cartItems.length === 0) {
@@ -16,9 +15,6 @@ router.post('/', async (req, res) => {
 
     // Log the incoming cartItems for debugging
     console.log('Received cartItems:', cartItems);
-
-    // Extract userId from the first item (adjust if necessary)
-    const userId = cartItems[0].userId;
 
     // If userId is missing, return an error
     if (!userId) {

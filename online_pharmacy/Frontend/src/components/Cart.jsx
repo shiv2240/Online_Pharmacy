@@ -13,20 +13,10 @@ const Cart = () => {
   // Fetch user data from localStorage if not available in context
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token && !user) {
-      // Get user data using token if it's not already in context
-      const fetchUser = async () => {
-        try {
-          const response = await axios.get('http://localhost:2010/api/user', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setUser(response.data);
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        }
-      };
-
-      fetchUser();
+    const savedUser = localStorage.getItem('user');
+    if (token && !user && savedUser) {
+      const userData = JSON.parse(savedUser);
+      setUser(userData);  // Set user from localStorage if not available in context
     } else if (!token) {
       navigate('/login'); // Redirect if there's no token
     }
@@ -156,7 +146,7 @@ const Cart = () => {
             Proceed to Payment
           </button>
 
-        </div>
+        </div>  
       )}
     </div>
   );

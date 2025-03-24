@@ -16,35 +16,58 @@ const PaymentPage = () => {
       // Log cart items being sent to the backend
       console.log("Sending cartItems:", cartItems);
 
+      // Get user from localStorage
+      const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      console.log("Saved User from LocalStorage:", savedUser); // Debugging line
+
+      const user = savedUser ? JSON.parse(savedUser) : null; // Ensure user is parsed from localStorage
+
+      if (!user || !user._id) {
+        throw new Error('User ID is missing');
+      }
+
+      // Log the user data for debugging
+      console.log("User Data:", user);
+
       // Call your backend to process the payment
       const response = await axios.post(
-        'https://online-pharmacy-ps8n.onrender.com/api/charge', // Update with your backend URL
+        'https://online-pharmacy-ps8n.onrender.com/api/charge',
         {
-          cartItems// Pass cart items for payment processing
+          userId: user._id,
+          cartItems, // Pass cart items for payment processing
+        address: 'user address',
+        contactNumber: 'user contact',
+        paymentMethod: 'card',
+        cardDetails: '**** **** **** 1234',
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
       );
-      console.log("backendData",response.data)
+      console.log("backendData", response.data);
+      
       // If payment is successful
       console.log("Payment successful!");
-
       setPaymentStatus('Payment successful!');
-
+      
       // Clear the cart locally and on the backend only if payment is successful
       setCartItems([]);
-
+      
       // Clear the cart on the backend using DELETE request
       await axios.delete(
-        'https://online-pharmacy-ps8n.onrender.com/api/cart', // Corrected DELETE method
+        'https://online-pharmacy-ps8n.onrender.com/api/cart',
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
 
       // Navigate to success page with orderId as state
       navigate('/success', { state: { orderId: response.data.orderId } });
-
+    
     } catch (error) {
       console.error('Payment error:', error);
       setPaymentStatus('Payment failed. Please try again.');
-      // Log the full error object for debugging
       console.error('Error details:', error.response || error);
     } finally {
       setLoading(false);
