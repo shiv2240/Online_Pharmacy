@@ -1,4 +1,3 @@
-// routes/charge.js
 const express = require('express');
 const Order = require('../models/Order'); // Import Order model
 const Cart = require('../models/Cart'); // Import Cart model
@@ -7,47 +6,69 @@ const router = express.Router();
 // POST request for handling payment
 router.post('/', async (req, res) => {
   try {
+    // Get cartItems from request body
     const { cartItems } = req.body;
 
-    // Simulate payment success
-    console.log('Processing payment for items:', cartItems);
+    // Check if cartItems is provided and has content
+    if (!cartItems || cartItems.length === 0) {
+      return res.status(400).json({ message: 'No items in cart' });
+    }
 
-    // Get userId from the cartItems or authenticate user using JWT token
-    const userId = cartItems[0].userId; // Assuming cartItems includes userId. Adjust as needed.
+    // Log the incoming cartItems for debugging
+    console.log('Received cartItems:', cartItems);
 
-    // Now create an order in the database
+    // Extract userId from the first item (adjust if necessary)
+    const userId = cartItems[0].userId;
+
+    // If userId is missing, return an error
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is missing' });
+    }
+
+    // Map cartItems to order items format
     const items = cartItems.map(item => ({
-      medicineId: item.medicineId,
+      medicineId: item.medicineId._id, // Assuming medicineId is an object, use the _id
       quantity: item.quantity,
-      price: item.medicineId.price,
+      price: item.medicineId.price,  // Assuming price is nested within medicineId
     }));
 
+    // Log the prepared order items for debugging
+    console.log('Order items:', items);
+
+    // Create a new order
     const newOrder = new Order({
       userId,
       items,
-      address: 'Some address', // You can add this to the request body from frontend
-      contactNumber: 'Some contact', // Same as above
-      paymentMethod: 'card', // Or UPI, based on your payment method
-      cardDetails: '**** **** **** 1234', // Or any other details needed
-      status: 'processing',
+      address: req.body.address || 'Default Address',  // Get address from request body or set default
+      contactNumber: req.body.contactNumber || 'Default Contact',  // Get contact from request body or set default
+      paymentMethod: req.body.paymentMethod || 'card',  // Payment method can be passed in the request
+      cardDetails: req.body.cardDetails || '**** **** **** 1234',  // Masked card number or pass actual details if required
+      status: 'processing',  // Order status initially set to processing
     });
 
+    // Save the order to the database
     await newOrder.save();
 
-    // Clear the cart for this user (assuming Cart model has a userId)
-    await Cart.deleteMany({ userId }); // Clear cart items from the Cart collection
+    // Log the created order for debugging
+    console.log('Order saved:', newOrder);
 
-    // Return the order ID
+    // Clear the user's cart after successful order creation
+    await Cart.deleteMany({ userId });
+
+    // Respond with success and the new order's ID
     res.status(200).json({
       message: 'Payment successful',
-      orderId: newOrder._id, // Send the order ID back
+      orderId: newOrder._id,  // Return the newly created order's ID
     });
-} catch (error) {
-    console.error('Payment error:', error.message);  // Log the error message
-    console.error(error.stack);  // Log the stack trace
-    res.status(500).json({ message: 'Payment failed. Please try again.' });
-}
 
+  } catch (error) {
+    // Log detailed error for debugging
+    console.error('Payment processing error:', error.message || error);
+    console.error('Error stack:', error.stack);
+
+    // Respond with an error message
+    res.status(500).json({ message: 'Payment failed. Please try again.' });
+  }
 });
 
 module.exports = router;
