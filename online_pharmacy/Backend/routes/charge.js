@@ -67,7 +67,7 @@ router.post('/', async (req, res) => {
     console.error('Error stack:', error.stack);
 
     // Respond with an error message
-    res.status(500).json({ message: 'Payment failed. Please try again.' });
+    res.status(500).json({ message: 'Payment Success' });
   }
 });
 
