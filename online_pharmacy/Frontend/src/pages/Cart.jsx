@@ -28,7 +28,7 @@ const Cart = () => {
 
       try {
         setLoading(true);
-        const { data } = await axios.get('http://localhost:2010/api/cart', {
+        const { data } = await axios.get('https://online-pharmacy-ps8n.onrender.com/api/cart', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         setCartItems(data.items || []);

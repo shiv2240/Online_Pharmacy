@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const res = await axios.post('https://online-pharmacy-ps8n.onrender.com/api/auth/login', { email, password });
     localStorage.setItem('token', res.data.token);
-    setUser(res.data.user);
+    setUser(res.data.user); // Store user data here
   };
 
   const register = async (name, email, password) => {
