@@ -30,7 +30,7 @@ const PaymentPage = () => {
 
       // Call your backend to process the payment
       const response = await axios.post(
-        'https://online-pharmacy-ps8n.onrender.com/api/charge/',
+        'https://online-pharmacy-ps8n.onrender.com/api/charge/ending',
         {
           userId: user._id,
           cartItems, // Pass cart items for payment processing
