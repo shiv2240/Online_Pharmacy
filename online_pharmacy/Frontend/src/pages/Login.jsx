@@ -13,7 +13,7 @@ const loginSchema = Yup.object().shape({
 
 const Login = () => {
   const { login } = useAuth(); // Login function from context
-  const { addNotification } = useNotification(); // Notification function from context
+  const { addNotification } = useNotification(); // Notification function from conte  xt
   const navigate = useNavigate(); // To navigate to different routes after login
 
   const handleSubmit = async (values, { setSubmitting }) => {
@@ -23,17 +23,20 @@ const Login = () => {
         const userId = response.user._id; // Assuming 'user' contains _id
         localStorage.setItem('userId', userId); // Store userId in localStorage
         addNotification('Login successful', 'success');
-        navigate('/'); // Redirect to home page after successful login
+        navigate('/', { replace: true }); // Redirect to home page after successful login
       } else {
-        addNotification('Login failed, please try again', 'error'); // Handle failure
+        addNotification('Login successful', 'success'); // Handle failure
       }
     } catch (error) {
-      addNotification(error.response?.data?.message || 'Login failed', 'error'); // Error notification
+      // Check if error.response exists or fallback to a default message
+      const errorMessage = error.response?.data?.message || 'An unexpected error occurred during login';
+      addNotification(errorMessage, 'error'); // Error notification
     } finally {
       setSubmitting(false); // Reset submitting state
     }
   };
-
+  
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

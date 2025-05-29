@@ -35,7 +35,8 @@ export function AuthProvider({ children }) {
       const res = await axios.post('https://online-pharmacy-ps8n.onrender.com/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       setUser(res.data.user); // Store user data here
-      navigate('/'); // Redirect to home after successful login
+      navigate('/'); 
+      return res.data// Redirect to home after successful login
     } catch (error) {
       console.error("Login failed:", error);
       alert("Login failed! Please check your credentials."); // Debugging alert

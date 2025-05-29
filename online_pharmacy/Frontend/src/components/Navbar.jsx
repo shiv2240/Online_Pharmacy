@@ -54,7 +54,7 @@ const Navbar = () => {
                   {item.icon && <span className="mr-1">{item.icon}</span>}
                   {item.name}
                   {item.count > 0 && item.name === 'Cart' && (
-                    <span className="ml-1 bg-primary-500 text-white rounded-full px-2 py-1 text-xs">
+                    <span className="ml-1 bg-primary-500 text-black rounded-full px-2 py-1 text-xs">
                       {item.count}
                     </span>
                   )}
@@ -113,7 +113,7 @@ const Navbar = () => {
                   {item.icon && <span className="mr-2">{item.icon}</span>}
                   {item.name}
                   {item.count > 0 && item.name === 'Cart' && (
-                    <span className="ml-2 bg-primary-500 text-white rounded-full px-2 py-1 text-xs">
+                    <span className="ml-2 bg-primary-500 text-black rounded-full px-2 py-1 text-xs">
                       {item.count}
                     </span>
                   )}

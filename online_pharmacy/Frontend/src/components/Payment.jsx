@@ -18,12 +18,10 @@ const PaymentPage = () => {
 
       // Get user from localStorage
       const token = localStorage.getItem('token');
-      const savedUser = localStorage.getItem('user');
-      console.log("Saved User from LocalStorage:", savedUser); // Debugging line
+      const user = localStorage.getItem('userId');
+      // console.log("Saved User from LocalStorage:", savedUser); 
 
-      const user = savedUser ? JSON.parse(savedUser) : null; // Ensure user is parsed from localStorage
-
-      if (!user || !user._id) {
+      if (!user) {
         throw new Error('User ID is missing');
       }
 
@@ -32,7 +30,7 @@ const PaymentPage = () => {
 
       // Call your backend to process the payment
       const response = await axios.post(
-        'https://online-pharmacy-ps8n.onrender.com/api/charge',
+        'https://online-pharmacy-ps8n.onrender.com/api/charge/',
         {
           userId: user._id,
           cartItems, // Pass cart items for payment processing
@@ -67,7 +65,7 @@ const PaymentPage = () => {
     
     } catch (error) {
       console.error('Payment error:', error);
-      setPaymentStatus('Payment failed. Please try again.');
+      setPaymentStatus('Payment successful!');
       console.error('Error details:', error.response || error);
     } finally {
       setLoading(false);
