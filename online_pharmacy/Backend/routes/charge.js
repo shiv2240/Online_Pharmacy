@@ -4,7 +4,7 @@ const Cart = require('../models/Cart'); // Import Cart model
 const router = express.Router();
 
 // POST request for handling payment
-router.post('/', async (req, res) => {
+router.post('/ending', async (req, res) => {
   try {
     // Get cartItems from request body
     const { cartItems } = req.body;
